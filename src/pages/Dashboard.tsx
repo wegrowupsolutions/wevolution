@@ -17,17 +17,17 @@ const Dashboard = () => {
   ];
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex flex-col gap-4 md:flex-row md:justify-between md:items-center">
+    <div className="p-4 space-y-4">
+      <div className="flex flex-col gap-2 md:flex-row md:justify-between md:items-center">
         <div className="space-y-1">
-          <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+          <h1 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
             Dashboard Wevolution
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-sm text-muted-foreground">
             Gerencie suas integrações WhatsApp e n8n
           </p>
         </div>
-        <Button size="lg" className="shadow-lg hover:shadow-xl transition-all">
+        <Button className="shadow-lg hover:shadow-xl transition-all">
           <Plus className="w-5 h-5 mr-2" />
           Nova Instância
         </Button>

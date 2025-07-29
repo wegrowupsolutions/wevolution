@@ -121,7 +121,7 @@ const Layout = ({ children }: LayoutProps) => {
       {/* Main content */}
       <div className="lg:pl-72 transition-all duration-300">
         {/* Top bar */}
-        <div className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b border-border/50 bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/80 px-6 shadow-sm">
+        <div className="sticky top-0 z-40 flex h-14 items-center gap-4 border-b border-border/50 bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/80 px-4 shadow-sm">
           <Button
             variant="ghost"
             size="sm"
@@ -160,7 +160,7 @@ const Layout = ({ children }: LayoutProps) => {
         </div>
 
         {/* Page content */}
-        <main className="min-h-[calc(100vh-4rem)]">
+        <main className="min-h-[calc(100vh-3.5rem)]">
           <div className="animate-fade-in">
             {children}
           </div>
