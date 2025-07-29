@@ -17,8 +17,19 @@ serve(async (req) => {
     console.log('Method:', req.method);
     console.log('Headers:', Object.fromEntries(req.headers.entries()));
 
-    const requestBody = await req.json();
-    console.log('Request body:', JSON.stringify(requestBody, null, 2));
+    let requestBody;
+    try {
+      requestBody = await req.json();
+      console.log('Request body:', JSON.stringify(requestBody, null, 2));
+    } catch (error) {
+      console.error('Failed to parse request body:', error);
+      return new Response(JSON.stringify({ 
+        error: 'Invalid JSON in request body' 
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
 
     const { url, path, method, headers: requestHeaders, body } = requestBody;
 
