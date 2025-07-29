@@ -5,20 +5,42 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
-import { Plus, QrCode, Settings, Trash2, Activity, Copy, RefreshCw } from "lucide-react";
+import { Plus, QrCode, Settings, Trash2, Activity, Copy, RefreshCw, Eye, EyeOff } from "lucide-react";
 import { instanceService, type Instance, type InstanceConfig } from "@/services/InstanceService";
 import { useApiKey, useWebhookEvents } from "@/hooks/useEvolutionAPI";
 
 const Instances = () => {
-  const [instances, setInstances] = useState<Instance[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Mock data para demonstração
+  const mockInstances = [
+    {
+      instance: { instanceName: "AFILIADO", status: "connected" },
+      hash: { apikey: "5E9F056FE441-4F5E-A277-85DAB55D97C5" },
+      profile: { name: "Afiliado IA", phone: "5511965788543" },
+      stats: { messages: "1.561", contacts: "1.102" }
+    },
+    {
+      instance: { instanceName: "teste1146", status: "connected" },
+      hash: { apikey: "7F2A123BC567-8D9E-F012-34AB56CD78EF" },
+      profile: { name: "Pet shop paradise", phone: "5511910362476" },
+      stats: { messages: "82", contacts: "3.178" }
+    }
+  ];
+
+  const [instances, setInstances] = useState<any[]>(mockInstances);
+  const [loading, setLoading] = useState(false);
   const [newInstance, setNewInstance] = useState<InstanceConfig>({ 
     instanceName: "", 
     qrcode: true,
     webhook_by_events: true,
     events: ["MESSAGES_UPSERT", "CONNECTION_UPDATE"]
   });
+  const [channel, setChannel] = useState("baileys");
+  const [token, setToken] = useState("5E9F056FE441-4F5E-A277-85DAB55D97C5");
+  const [number, setNumber] = useState("");
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [showToken, setShowToken] = useState(false);
   const { apiKey, updateApiKey } = useApiKey();
   const { connectionStatus, qrCode } = useWebhookEvents();
   // Carregar instâncias
@@ -179,54 +201,103 @@ const Instances = () => {
   }
 
   return (
-    <div className="h-full pl-2 pr-3 py-3 lg:pl-4 lg:pr-6 lg:py-6 space-y-4 lg:space-y-6">
+    <div className="p-6 space-y-6">
+      {/* Header com busca e botão */}
       <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-xl md:text-2xl lg:text-3xl font-bold">Gerenciamento de Instâncias</h1>
-          <p className="text-xs md:text-sm text-muted-foreground">
-            Crie e gerencie suas conexões WhatsApp Business ({instances.length} instâncias)
-          </p>
+        <div className="flex-1 max-w-md">
+          <Input 
+            placeholder="Search" 
+            className="bg-background border-border"
+          />
         </div>
-        
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={loadInstances} disabled={loading}>
-            <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-            Atualizar
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="sm">
+            <RefreshCw className="w-4 h-4" />
           </Button>
-          <Dialog>
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
-              <Button>
-                <Plus className="w-4 h-4 mr-2" />
-                Nova Instância
+              <Button className="bg-primary text-primary-foreground">
+                Instance +
               </Button>
             </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Criar Nova Instância</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="name">Nome da Instância</Label>
-                <Input
-                  id="name"
-                  placeholder="Ex: whatsapp-business"
-                  value={newInstance.instanceName}
-                  onChange={(e) => setNewInstance({...newInstance, instanceName: e.target.value})}
-                />
+            <DialogContent className="bg-background border-border">
+              <DialogHeader>
+                <DialogTitle className="text-foreground">New instance</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name" className="text-foreground">
+                    Name <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="name"
+                    value={newInstance.instanceName}
+                    onChange={(e) => setNewInstance({...newInstance, instanceName: e.target.value})}
+                    className="bg-background border-border text-foreground"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label className="text-foreground">Channel</Label>
+                  <Select value={channel} onValueChange={setChannel}>
+                    <SelectTrigger className="bg-background border-border text-foreground">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-background border-border">
+                      <SelectItem value="baileys">Baileys</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="token" className="text-foreground">
+                    Token <span className="text-red-500">*</span>
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      id="token"
+                      type={showToken ? "text" : "password"}
+                      value={token}
+                      onChange={(e) => setToken(e.target.value)}
+                      className="bg-background border-border text-foreground pr-10"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3"
+                      onClick={() => setShowToken(!showToken)}
+                    >
+                      {showToken ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="number" className="text-foreground">Number</Label>
+                  <Input
+                    id="number"
+                    value={number}
+                    onChange={(e) => setNumber(e.target.value)}
+                    className="bg-background border-border text-foreground"
+                  />
+                </div>
+
+                <div className="flex justify-end pt-4">
+                  <Button 
+                    onClick={createInstance}
+                    className="bg-primary text-primary-foreground px-6"
+                  >
+                    Save
+                  </Button>
+                </div>
               </div>
-              <div>
-                <Label htmlFor="webhook">URL do Webhook (opcional)</Label>
-                <Input
-                  id="webhook"
-                  placeholder="https://seu-n8n.com/webhook/evolution"
-                  value={newInstance.webhook || ''}
-                  onChange={(e) => setNewInstance({...newInstance, webhook: e.target.value})}
-                />
-              </div>
-              <Button className="w-full" onClick={createInstance}>Criar Instância</Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+            </DialogContent>
+          </Dialog>
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <span>Status</span>
+            <div className="w-1 h-1 bg-muted-foreground rounded-full"></div>
+          </div>
         </div>
       </div>
 
@@ -235,65 +306,71 @@ const Instances = () => {
           <RefreshCw className="w-8 h-8 animate-spin" />
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
         {instances.map((instance) => (
-          <Card key={instance.instance.instanceName} className="relative">
-            <CardHeader>
+          <Card key={instance.instance.instanceName} className="bg-card border-border">
+            <CardHeader className="pb-4">
               <div className="flex justify-between items-start">
-                <div>
-                  <CardTitle className="flex items-center gap-2">
-                    {getStatusIcon(instance.instance.status)}
-                    {instance.instance.instanceName}
-                  </CardTitle>
-                  <p className="text-sm text-muted-foreground">
-                    Status: {connectionStatus[instance.instance.instanceName] || instance.instance.status}
-                  </p>
+                <CardTitle className="text-lg font-medium text-foreground">
+                  {instance.instance.instanceName}
+                </CardTitle>
+                <Button variant="ghost" size="sm">
+                  <Settings className="w-4 h-4 text-muted-foreground" />
+                </Button>
+              </div>
+              
+              {/* Token display */}
+              <div className="bg-muted/50 rounded px-3 py-2 flex items-center justify-between">
+                <span className="text-sm font-mono text-muted-foreground">
+                  •••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••
+                </span>
+                <div className="flex gap-1">
+                  <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                    <Copy className="w-3 h-3" />
+                  </Button>
+                  <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                    <Eye className="w-3 h-3" />
+                  </Button>
                 </div>
-                <Badge variant={getStatusColor(instance.instance.status)}>
-                  {connectionStatus[instance.instance.instanceName] || instance.instance.status}
-                </Badge>
               </div>
             </CardHeader>
+            
             <CardContent className="space-y-4">
-              {instance.hash?.apikey && (
-                <div>
-                  <Label className="text-xs text-muted-foreground">API Key</Label>
-                  <div className="flex items-center space-x-2">
-                    <Input 
-                      value={`${instance.hash.apikey.substring(0, 20)}...`} 
-                      readOnly 
-                      className="text-xs font-mono" 
-                    />
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => copyApiKey(instance.hash!.apikey)}
-                    >
-                      <Copy className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
-              )}
+              {/* Profile info */}
+              <div className="flex items-center gap-3">
+                 <div className="w-10 h-10 bg-muted rounded-full flex items-center justify-center">
+                   <span className="text-sm font-medium">
+                     {instance.profile?.name?.charAt(0) || instance.instance.instanceName.charAt(0)}
+                   </span>
+                 </div>
+                 <div className="flex-1">
+                   <p className="font-medium text-foreground">{instance.profile?.name || 'Usuario'}</p>
+                   <p className="text-sm text-muted-foreground">{instance.profile?.phone || 'N/A'}</p>
+                 </div>
+                 <div className="text-right">
+                   <div className="flex items-center gap-1">
+                     <span className="text-sm text-muted-foreground">{instance.stats?.messages || '0'}</span>
+                     <span className="text-xs text-muted-foreground">{instance.stats?.contacts || '0'}</span>
+                   </div>
+                 </div>
+              </div>
               
-              <div className="flex space-x-2">
+              {/* Action buttons */}
+              <div className="flex gap-2">
                 <Button 
                   variant="outline" 
-                  size="sm" 
-                  className="flex-1"
-                  onClick={() => getQRCode(instance.instance.instanceName)}
+                  size="sm"
+                  className="bg-primary/10 border-primary/20 text-primary hover:bg-primary/20"
                 >
-                  <QrCode className="w-4 h-4 mr-2" />
-                  QR Code
-                </Button>
-                <Button variant="outline" size="sm">
-                  <Settings className="w-4 h-4" />
+                  Connected
                 </Button>
                 <Button 
                   variant="outline" 
                   size="sm"
+                  className="bg-destructive/10 border-destructive/20 text-destructive hover:bg-destructive/20"
                   onClick={() => deleteInstance(instance.instance.instanceName)}
                 >
-                  <Trash2 className="w-4 h-4" />
+                  Delete
                 </Button>
               </div>
             </CardContent>
@@ -302,25 +379,6 @@ const Instances = () => {
         </div>
       )}
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Configurações de API</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <Label>Base URL da API</Label>
-            <Input value="https://api.evolution.com" readOnly />
-          </div>
-          <div>
-            <Label>Webhook Base URL</Label>
-            <Input placeholder="https://seu-webhook.com/evolution" />
-          </div>
-          <div className="flex space-x-2">
-            <Button>Salvar Configurações</Button>
-            <Button variant="outline">Testar Conexão</Button>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 };
