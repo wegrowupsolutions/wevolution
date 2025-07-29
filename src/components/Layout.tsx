@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { 
   LayoutDashboard, 
   MessageSquare, 
@@ -10,7 +12,9 @@ import {
   Database,
   Menu,
   X,
-  Activity
+  Activity,
+  Zap,
+  Bell
 } from "lucide-react";
 
 interface LayoutProps {
@@ -42,22 +46,27 @@ const Layout = ({ children }: LayoutProps) => {
 
       {/* Sidebar */}
       <div className={cn(
-        "fixed inset-y-0 left-0 z-50 w-64 bg-card border-r transform transition-transform duration-200 ease-in-out lg:translate-x-0 lg:static lg:inset-0",
+        "fixed inset-y-0 left-0 z-50 w-72 bg-card/95 backdrop-blur-sm border-r border-border/50 transform transition-all duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 shadow-lg",
         sidebarOpen ? "translate-x-0" : "-translate-x-full"
       )}>
         <div className="flex h-full flex-col">
           {/* Logo */}
-          <div className="flex h-16 items-center px-4 border-b">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                <Activity className="w-5 h-5 text-primary-foreground" />
+          <div className="flex h-16 items-center px-6 border-b border-border/50">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-primary rounded-xl flex items-center justify-center shadow-glow">
+                <Zap className="w-6 h-6 text-primary-foreground" />
               </div>
-              <span className="font-bold text-lg">Evolution Platform</span>
+              <div>
+                <span className="font-bold text-lg bg-gradient-primary bg-clip-text text-transparent">
+                  Evolution
+                </span>
+                <p className="text-xs text-muted-foreground">WhatsApp Platform</p>
+              </div>
             </div>
             <Button
               variant="ghost"
               size="sm"
-              className="ml-auto lg:hidden"
+              className="ml-auto lg:hidden hover:bg-muted/50"
               onClick={() => setSidebarOpen(false)}
             >
               <X className="w-4 h-4" />
@@ -65,7 +74,7 @@ const Layout = ({ children }: LayoutProps) => {
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 px-4 py-4 space-y-2">
+          <nav className="flex-1 px-4 py-6 space-y-1 custom-scrollbar overflow-y-auto">
             {navigation.map((item) => {
               const isActive = location.pathname === item.href;
               return (
@@ -73,61 +82,88 @@ const Layout = ({ children }: LayoutProps) => {
                   key={item.name}
                   to={item.href}
                   className={cn(
-                    "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+                    "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group",
                     isActive
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                      ? "bg-primary text-primary-foreground shadow-md"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                   )}
                   onClick={() => setSidebarOpen(false)}
                 >
-                  <item.icon className="w-4 h-4" />
-                  {item.name}
+                  <item.icon className={cn(
+                    "w-5 h-5 transition-all duration-200",
+                    isActive ? "scale-110" : "group-hover:scale-105"
+                  )} />
+                  <span className="font-medium">{item.name}</span>
+                  {isActive && (
+                    <div className="ml-auto w-2 h-2 bg-primary-foreground rounded-full animate-pulse" />
+                  )}
                 </Link>
               );
             })}
           </nav>
 
           {/* Footer */}
-          <div className="border-t p-4">
-            <div className="text-xs text-muted-foreground">
-              <p>Evolution Platform v1.0</p>
-              <p>Conecte suas aplicações ao n8n</p>
+          <div className="border-t border-border/50 p-4 mt-auto">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <div className="w-2 h-2 bg-success rounded-full animate-pulse" />
+                <span>Sistema Online</span>
+              </div>
+              <div className="text-xs text-muted-foreground space-y-1">
+                <p className="font-medium">Evolution Platform v2.0</p>
+                <p className="text-[10px]">Conecte suas aplicações ao n8n</p>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
       {/* Main content */}
-      <div className="lg:pl-64">
+      <div className="lg:pl-72 transition-all duration-300">
         {/* Top bar */}
-        <div className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4">
+        <div className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b border-border/50 bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/80 px-6 shadow-sm">
           <Button
             variant="ghost"
             size="sm"
-            className="lg:hidden"
+            className="lg:hidden hover:bg-muted/50"
             onClick={() => setSidebarOpen(true)}
           >
-            <Menu className="w-4 h-4" />
+            <Menu className="w-5 h-5" />
           </Button>
 
           <div className="flex-1" />
 
           {/* Status indicators */}
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 text-sm">
-              <div className="w-2 h-2 bg-green-500 rounded-full" />
-              <span className="text-muted-foreground">3 instâncias ativas</span>
+          <div className="flex items-center gap-6">
+            <div className="hidden md:flex items-center gap-4">
+              <div className="flex items-center gap-2 text-sm">
+                <Badge variant="secondary" className="gap-1 px-2 py-1">
+                  <div className="w-2 h-2 bg-success rounded-full animate-pulse" />
+                  3 instâncias
+                </Badge>
+              </div>
+              <div className="flex items-center gap-2 text-sm">
+                <Badge variant="secondary" className="gap-1 px-2 py-1">
+                  <div className="w-2 h-2 bg-primary rounded-full" />
+                  2 webhooks
+                </Badge>
+              </div>
             </div>
-            <div className="flex items-center gap-2 text-sm">
-              <div className="w-2 h-2 bg-blue-500 rounded-full" />
-              <span className="text-muted-foreground">2 webhooks</span>
-            </div>
+            
+            <Button variant="ghost" size="sm" className="relative hover:bg-muted/50">
+              <Bell className="w-4 h-4" />
+              <span className="absolute -top-1 -right-1 w-2 h-2 bg-destructive rounded-full"></span>
+            </Button>
+            
+            <ThemeToggle />
           </div>
         </div>
 
         {/* Page content */}
-        <main className="flex-1">
-          {children}
+        <main className="min-h-[calc(100vh-4rem)] bg-gradient-to-br from-background via-background to-muted/20">
+          <div className="animate-fade-in">
+            {children}
+          </div>
         </main>
       </div>
     </div>
