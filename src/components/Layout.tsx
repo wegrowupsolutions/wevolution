@@ -35,7 +35,7 @@ const Layout = ({ children }: LayoutProps) => {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex">
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
         <div 
@@ -119,7 +119,7 @@ const Layout = ({ children }: LayoutProps) => {
       </div>
 
       {/* Main content */}
-      <div className="lg:pl-72 transition-all duration-300">
+      <div className="flex-1 flex flex-col lg:pl-72 transition-all duration-300">
         {/* Top bar */}
         <div className="sticky top-0 z-40 flex h-14 items-center gap-4 border-b border-border/50 bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/80 px-4 shadow-sm">
           <Button
@@ -160,7 +160,7 @@ const Layout = ({ children }: LayoutProps) => {
         </div>
 
         {/* Page content */}
-        <main className="min-h-[calc(100vh-3.5rem)]">
+        <main className="flex-1 overflow-auto">
           <div className="animate-fade-in">
             {children}
           </div>

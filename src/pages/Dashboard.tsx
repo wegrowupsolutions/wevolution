@@ -17,7 +17,7 @@ const Dashboard = () => {
   ];
 
   return (
-    <div className="p-4 space-y-4">
+    <div className="h-full p-4 space-y-4">
       <div className="flex flex-col gap-2 md:flex-row md:justify-between md:items-center">
         <div className="space-y-1">
           <h1 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
