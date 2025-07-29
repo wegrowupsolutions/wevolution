@@ -121,7 +121,7 @@ const Layout = ({ children }: LayoutProps) => {
       {/* Main content */}
       <div className="flex-1 flex flex-col lg:pl-72 transition-all duration-300">
         {/* Top bar */}
-        <div className="sticky top-0 z-40 flex h-14 items-center gap-4 border-b border-border/50 bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/80 px-3 lg:px-6 shadow-sm">
+        <div className="sticky top-0 z-40 flex h-14 items-center gap-4 border-b border-border/50 bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/80 pl-2 pr-3 lg:pl-4 lg:pr-6 shadow-sm">
           <Button
             variant="ghost"
             size="sm"
