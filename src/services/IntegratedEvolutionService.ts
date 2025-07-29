@@ -30,7 +30,7 @@ class IntegratedEvolutionService {
 
     try {
       const { data, error } = await supabase.functions.invoke('evolution-proxy', {
-        body: requestBody,
+        body: JSON.stringify(requestBody),
         headers: {
           Authorization: `Bearer ${session.data.session.access_token}`,
           'Content-Type': 'application/json'
