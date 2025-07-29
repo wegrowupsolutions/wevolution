@@ -17,35 +17,36 @@ const Dashboard = () => {
   ];
 
   return (
-    <div className="h-full p-4 space-y-4">
+    <div className="h-full p-3 lg:p-6 space-y-4 lg:space-y-6">
       <div className="flex flex-col gap-2 md:flex-row md:justify-between md:items-center">
         <div className="space-y-1">
-          <h1 className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+          <h1 className="text-xl md:text-2xl lg:text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
             Dashboard Wevolution
           </h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-xs md:text-sm text-muted-foreground">
             Gerencie suas integrações WhatsApp e n8n
           </p>
         </div>
-        <Button className="shadow-lg hover:shadow-xl transition-all">
+        <Button className="w-full md:w-auto shadow-lg hover:shadow-xl transition-all">
           <Plus className="w-5 h-5 mr-2" />
           Nova Instância
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
         <Card className="border-l-4 border-l-success hover:shadow-md transition-all">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Instâncias Ativas</CardTitle>
-            <div className="p-2 bg-success/10 rounded-lg">
-              <Activity className="h-5 w-5 text-success" />
+            <CardTitle className="text-xs lg:text-sm font-medium text-muted-foreground">Instâncias Ativas</CardTitle>
+            <div className="p-1 lg:p-2 bg-success/10 rounded-lg">
+              <Activity className="h-4 w-4 lg:h-5 lg:w-5 text-success" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">1</div>
-            <p className="text-xs text-muted-foreground flex items-center gap-1">
+            <div className="text-2xl lg:text-3xl font-bold">1</div>
+            <p className="text-xs flex items-center gap-1 text-muted-foreground">
               <TrendingUp className="w-3 h-3" />
-              de 3 total configuradas
+              <span className="hidden lg:inline">de 3 total configuradas</span>
+              <span className="lg:hidden">3 total</span>
             </p>
           </CardContent>
         </Card>
@@ -96,7 +97,7 @@ const Dashboard = () => {
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 lg:gap-6">
         <Card className="shadow-lg hover:shadow-xl transition-all">
           <CardHeader className="border-b border-border/50">
             <CardTitle className="flex items-center gap-2 text-xl">
@@ -107,10 +108,10 @@ const Dashboard = () => {
               Gerencie suas conexões WhatsApp Business em tempo real
             </CardDescription>
           </CardHeader>
-          <CardContent className="p-6">
+          <CardContent className="p-3 lg:p-6">
             <div className="space-y-4">
               {instances.map((instance) => (
-                <div key={instance.id} className="p-4 rounded-xl border border-border/50 hover:border-primary/20 transition-all bg-muted/20">
+                <div key={instance.id} className="p-3 lg:p-4 rounded-xl border border-border/50 hover:border-primary/20 transition-all bg-muted/20">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4">
                       <div className={`w-4 h-4 rounded-full ${
@@ -119,12 +120,12 @@ const Dashboard = () => {
                         'bg-destructive'
                       }`} />
                       <div className="space-y-1">
-                        <p className="font-medium text-lg">{instance.name}</p>
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                        <p className="font-medium text-sm lg:text-lg">{instance.name}</p>
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-xs lg:text-sm text-muted-foreground">
                           <span>{instance.messages} mensagens</span>
                           <span>Uptime: {instance.uptime}%</span>
                         </div>
-                        <Progress value={instance.uptime} className="w-32 h-2" />
+                        <Progress value={instance.uptime} className="w-24 lg:w-32 h-1 lg:h-2" />
                       </div>
                     </div>
                     <div className="flex items-center space-x-3">

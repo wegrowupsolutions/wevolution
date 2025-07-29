@@ -121,7 +121,7 @@ const Layout = ({ children }: LayoutProps) => {
       {/* Main content */}
       <div className="flex-1 flex flex-col lg:pl-72 transition-all duration-300">
         {/* Top bar */}
-        <div className="sticky top-0 z-40 flex h-14 items-center gap-4 border-b border-border/50 bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/80 px-4 shadow-sm">
+        <div className="sticky top-0 z-40 flex h-14 items-center gap-4 border-b border-border/50 bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/80 px-3 lg:px-6 shadow-sm">
           <Button
             variant="ghost"
             size="sm"
@@ -134,18 +134,20 @@ const Layout = ({ children }: LayoutProps) => {
           <div className="flex-1" />
 
           {/* Status indicators */}
-          <div className="flex items-center gap-6">
-            <div className="hidden md:flex items-center gap-4">
+          <div className="flex items-center gap-3 lg:gap-6">
+            <div className="hidden sm:flex items-center gap-2 lg:gap-4">
               <div className="flex items-center gap-2 text-sm">
-                <Badge variant="secondary" className="gap-1 px-2 py-1">
+                <Badge variant="secondary" className="gap-1 px-2 py-1 text-xs">
                   <div className="w-2 h-2 bg-success rounded-full animate-pulse" />
-                  3 instâncias
+                  <span className="hidden sm:inline">3 instâncias</span>
+                  <span className="sm:hidden">3</span>
                 </Badge>
               </div>
               <div className="flex items-center gap-2 text-sm">
-                <Badge variant="secondary" className="gap-1 px-2 py-1">
+                <Badge variant="secondary" className="gap-1 px-2 py-1 text-xs">
                   <div className="w-2 h-2 bg-primary rounded-full" />
-                  2 webhooks
+                  <span className="hidden sm:inline">2 webhooks</span>
+                  <span className="sm:hidden">2</span>
                 </Badge>
               </div>
             </div>
