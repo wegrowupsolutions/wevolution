@@ -13,7 +13,24 @@ serve(async (req) => {
   }
 
   try {
-    const { url, path, method, headers: requestHeaders, body } = await req.json();
+    console.log('=== Evolution Proxy Request ===');
+    console.log('Method:', req.method);
+    console.log('Headers:', Object.fromEntries(req.headers.entries()));
+
+    const requestBody = await req.json();
+    console.log('Request body:', JSON.stringify(requestBody, null, 2));
+
+    const { url, path, method, headers: requestHeaders, body } = requestBody;
+
+    if (!url || !path || !method) {
+      console.error('Missing required parameters:', { url, path, method });
+      return new Response(JSON.stringify({ 
+        error: 'Missing required parameters: url, path, method' 
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
 
     console.log(`Proxying ${method} request to: ${url}${path}`);
 
@@ -25,6 +42,7 @@ serve(async (req) => {
     // Verificar autenticação
     const authHeader = req.headers.get('authorization');
     if (!authHeader) {
+      console.error('Missing authorization header');
       return new Response(JSON.stringify({ error: 'Missing authorization header' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -33,11 +51,14 @@ serve(async (req) => {
 
     const { data: { user }, error: authError } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
     if (authError || !user) {
+      console.error('Authentication failed:', authError);
       return new Response(JSON.stringify({ error: 'Invalid authorization' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
+
+    console.log('Authenticated user:', user.id);
 
     // Preparar headers para a requisição
     const headers: Record<string, string> = {
@@ -46,28 +67,62 @@ serve(async (req) => {
     };
 
     // Adicionar API key se fornecida
-    if (requestHeaders.apikey) {
+    if (requestHeaders?.apikey) {
       headers['apikey'] = requestHeaders.apikey;
+      console.log('API Key added to headers');
+    } else {
+      console.warn('No API key provided in headers');
     }
 
+    console.log('Request headers to Evolution API:', headers);
+    console.log('Request body to Evolution API:', body);
+
     // Fazer a requisição para a Evolution API
-    const response = await fetch(`${url}${path}`, {
+    const fullUrl = `${url}${path}`;
+    console.log('Full URL:', fullUrl);
+
+    const response = await fetch(fullUrl, {
       method,
       headers,
       body: body ? JSON.stringify(body) : undefined,
     });
 
+    console.log(`Response status: ${response.status}`);
+    console.log(`Response headers:`, Object.fromEntries(response.headers.entries()));
+
     const responseData = await response.text();
+    console.log(`Raw response data:`, responseData);
+
     let jsonData;
     
     try {
       jsonData = JSON.parse(responseData);
-    } catch {
-      jsonData = { raw: responseData };
+    } catch (parseError) {
+      console.warn('Failed to parse response as JSON:', parseError);
+      jsonData = { 
+        raw: responseData,
+        parseError: parseError.message 
+      };
     }
 
-    console.log(`Response status: ${response.status}`);
-    console.log(`Response data:`, jsonData);
+    console.log(`Parsed response data:`, jsonData);
+
+    // Se a resposta não for 2xx, retornar erro mas com detalhes
+    if (!response.ok) {
+      console.error(`Evolution API returned error status ${response.status}`);
+      return new Response(JSON.stringify({
+        error: `Evolution API error: ${response.status} ${response.statusText}`,
+        details: jsonData,
+        status: response.status,
+        url: fullUrl
+      }), {
+        status: response.status,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json',
+        },
+      });
+    }
 
     return new Response(JSON.stringify(jsonData), {
       status: response.status,
@@ -79,10 +134,12 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Error in evolution-proxy:', error);
+    console.error('Error stack:', error.stack);
     
     return new Response(JSON.stringify({ 
       error: 'Internal server error',
-      details: error.message 
+      details: error.message,
+      stack: error.stack
     }), {
       status: 500,
       headers: {

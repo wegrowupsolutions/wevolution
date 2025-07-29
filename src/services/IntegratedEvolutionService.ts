@@ -4,28 +4,51 @@ import { supabaseEvolutionService } from './SupabaseEvolutionService';
 class IntegratedEvolutionService {
   // Proxy para fazer chamadas à Evolution API através do edge function
   private async callEvolutionAPI(path: string, method: 'GET' | 'POST' | 'PUT' | 'DELETE' = 'GET', body?: any, apiKey?: string, apiUrl?: string) {
+    console.log('=== IntegratedEvolutionService.callEvolutionAPI ===');
+    console.log('Path:', path);
+    console.log('Method:', method);
+    console.log('API URL:', apiUrl);
+    console.log('Has API Key:', !!apiKey);
+    console.log('Body:', body);
+
     const session = await supabase.auth.getSession();
     if (!session.data.session?.access_token) {
       throw new Error('User not authenticated');
     }
 
+    const requestBody = {
+      url: apiUrl || 'https://api.evolution-api.com',
+      path,
+      method,
+      headers: apiKey ? { 
+        apikey: apiKey,
+        'Content-Type': 'application/json'
+      } : {},
+      body
+    };
+
+    console.log('Request to edge function:', JSON.stringify(requestBody, null, 2));
+
     const { data, error } = await supabase.functions.invoke('evolution-proxy', {
-      body: {
-        url: apiUrl || 'https://api.evolution-api.com', // URL base da Evolution API
-        path,
-        method,
-        headers: apiKey ? { 
-          apikey: apiKey,
-          'Content-Type': 'application/json'
-        } : {},
-        body
-      },
+      body: requestBody,
       headers: {
         Authorization: `Bearer ${session.data.session.access_token}`,
+        'Content-Type': 'application/json'
       },
     });
 
-    if (error) throw error;
+    console.log('Edge function response:', { data, error });
+
+    if (error) {
+      console.error('Edge function error:', error);
+      throw new Error(`Edge Function error: ${error.message}`);
+    }
+    
+    if (data?.error) {
+      console.error('Evolution API error:', data);
+      throw new Error(`Evolution API error: ${data.error}` + (data.details ? ` - ${JSON.stringify(data.details)}` : ''));
+    }
+
     return data;
   }
 

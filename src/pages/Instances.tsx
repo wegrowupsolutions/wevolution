@@ -133,7 +133,25 @@ const Instances = () => {
       
     } catch (error: any) {
       console.error('Error creating instance:', error);
-      toast.error("Erro ao criar instância: " + (error.message || "Erro desconhecido"));
+      
+      // Melhor tratamento de erro com mais detalhes
+      let errorMessage = "Erro desconhecido";
+      
+      if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      // Se é erro da Evolution API, mostrar detalhes específicos
+      if (error.message?.includes('Evolution API error')) {
+        errorMessage = `Erro da Evolution API: Verifique se a URL e API Key estão corretos. ${error.message}`;
+      }
+      
+      // Se é erro de conectividade
+      if (error.message?.includes('fetch')) {
+        errorMessage = "Erro de conectividade: Verifique se a URL da Evolution API está acessível.";
+      }
+      
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
