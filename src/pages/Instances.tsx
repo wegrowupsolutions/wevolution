@@ -164,42 +164,7 @@ const Instances = () => {
     }
   };
 
-  if (!apiKey) {
-    return (
-      <div className="container mx-auto p-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Configurar API Key</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label>Evolution API Key</Label>
-              <Input 
-                type="password"
-                placeholder="Digite sua API Key"
-                onKeyPress={(e) => {
-                  if (e.key === 'Enter') {
-                    updateApiKey(e.currentTarget.value);
-                  }
-                }}
-              />
-            </div>
-            <Button 
-              onClick={() => {
-                const input = document.querySelector('input[type="password"]') as HTMLInputElement;
-                if (input?.value) {
-                  updateApiKey(input.value);
-                }
-              }}
-            >
-              Salvar API Key
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
+  // Sempre mostrar o layout principal, API Key é configurada dentro da página
   return (
     <div className="p-6 space-y-6">
       {/* Header com busca e botão */}
@@ -379,6 +344,40 @@ const Instances = () => {
         </div>
       )}
 
+      {/* Seção de configuração da API Key se não estiver configurada */}
+      {!apiKey && (
+        <Card className="bg-card border-border">
+          <CardHeader>
+            <CardTitle className="text-foreground">Configurar API Key</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label className="text-foreground">Evolution API Key</Label>
+              <Input 
+                type="password"
+                placeholder="Digite sua API Key"
+                className="bg-background border-border text-foreground"
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    updateApiKey(e.currentTarget.value);
+                  }
+                }}
+              />
+            </div>
+            <Button 
+              onClick={() => {
+                const input = document.querySelector('input[type="password"]') as HTMLInputElement;
+                if (input?.value) {
+                  updateApiKey(input.value);
+                }
+              }}
+              className="bg-primary text-primary-foreground"
+            >
+              Salvar API Key
+            </Button>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };
