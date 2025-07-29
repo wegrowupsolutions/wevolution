@@ -18,7 +18,7 @@ const Instances = () => {
   const [loading, setLoading] = useState(false);
   const [newInstance, setNewInstance] = useState({
     instanceName: "",
-    apiUrl: "https://api.evolution.com", // URL da Evolution API
+    apiUrl: "",
     apiKey: "",
     webhookUrl: `https://xzjzxckxaiwneybyduim.supabase.co/functions/v1/webhook-handler`,
   });
@@ -123,7 +123,7 @@ const Instances = () => {
       // Limpar formulário
       setNewInstance({
         instanceName: "",
-        apiUrl: "https://api.evolution.com",
+        apiUrl: "",
         apiKey: "",
         webhookUrl: `https://xzjzxckxaiwneybyduim.supabase.co/functions/v1/webhook-handler`,
       });
@@ -269,11 +269,14 @@ const Instances = () => {
                   </Label>
                   <Input
                     id="apiUrl"
-                    placeholder="https://api.evolution.com"
+                    placeholder="Ex: https://api.evolution-api.com"
                     value={newInstance.apiUrl}
                     onChange={(e) => setNewInstance({...newInstance, apiUrl: e.target.value})}
                     className="bg-background border-border text-foreground"
                   />
+                  <p className="text-xs text-muted-foreground">
+                    URL base da sua instância Evolution API (sem /instance no final)
+                  </p>
                 </div>
 
                 <div className="space-y-2">

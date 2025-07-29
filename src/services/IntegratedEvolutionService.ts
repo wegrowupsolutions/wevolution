@@ -3,7 +3,7 @@ import { supabaseEvolutionService } from './SupabaseEvolutionService';
 
 class IntegratedEvolutionService {
   // Proxy para fazer chamadas à Evolution API através do edge function
-  private async callEvolutionAPI(path: string, method: 'GET' | 'POST' | 'PUT' | 'DELETE' = 'GET', body?: any, apiKey?: string) {
+  private async callEvolutionAPI(path: string, method: 'GET' | 'POST' | 'PUT' | 'DELETE' = 'GET', body?: any, apiKey?: string, apiUrl?: string) {
     const session = await supabase.auth.getSession();
     if (!session.data.session?.access_token) {
       throw new Error('User not authenticated');
@@ -11,10 +11,13 @@ class IntegratedEvolutionService {
 
     const { data, error } = await supabase.functions.invoke('evolution-proxy', {
       body: {
-        url: 'https://api.evolution.com', // URL base da Evolution API
+        url: apiUrl || 'https://api.evolution-api.com', // URL base da Evolution API
         path,
         method,
-        headers: apiKey ? { apikey: apiKey } : {},
+        headers: apiKey ? { 
+          apikey: apiKey,
+          'Content-Type': 'application/json'
+        } : {},
         body
       },
       headers: {
@@ -38,20 +41,34 @@ class IntegratedEvolutionService {
     apiKey: string;
   }) {
     try {
-      // Criar instância via Evolution API
+      console.log('Creating instance with data:', instanceData);
+
+      // Criar instância via Evolution API usando os endpoints corretos
       const evolutionResponse = await this.callEvolutionAPI('/instance/create', 'POST', {
         instanceName: instanceData.instanceName,
         token: instanceData.token,
         qrcode: instanceData.qrcode !== false,
         webhook: instanceData.webhook,
-        webhook_by_events: instanceData.webhook_by_events,
+        webhook_by_events: instanceData.webhook_by_events !== false,
         events: instanceData.events || [
-          'qrcode.updated',
-          'connection.update',
-          'messages.upsert',
-          'contacts.upsert'
+          'QRCODE_UPDATED',
+          'CONNECTION_UPDATE',
+          'MESSAGES_UPSERT',
+          'MESSAGES_UPDATE', 
+          'SEND_MESSAGE',
+          'CONTACTS_UPSERT',
+          'CONTACTS_UPDATE',
+          'PRESENCE_UPDATE',
+          'CHATS_UPSERT',
+          'CHATS_UPDATE',
+          'CHATS_DELETE',
+          'GROUPS_UPSERT',
+          'GROUP_UPDATE',
+          'GROUP_PARTICIPANTS_UPDATE'
         ]
-      }, instanceData.apiKey);
+      }, instanceData.apiKey, instanceData.apiUrl);
+
+      console.log('Evolution API response:', evolutionResponse);
 
       // Salvar no banco de dados local
       const dbResult = await supabaseEvolutionService.createInstance({
@@ -61,6 +78,8 @@ class IntegratedEvolutionService {
         webhook_url: instanceData.webhook,
         status: 'created'
       });
+
+      console.log('Database result:', dbResult);
 
       return { evolutionResponse, dbResult };
     } catch (error) {
@@ -72,20 +91,30 @@ class IntegratedEvolutionService {
   async connectInstance(instanceId: string, apiKey: string) {
     try {
       // Buscar dados da instância
-      const { data: instance } = await supabaseEvolutionService.getInstances();
-      const targetInstance = instance?.find(i => i.id === instanceId);
+      const { data: instances } = await supabaseEvolutionService.getInstances();
+      const targetInstance = instances?.find(i => i.id === instanceId);
       
       if (!targetInstance) {
         throw new Error('Instance not found');
       }
 
+      console.log('Connecting instance:', targetInstance.instance_name);
+
       // Conectar via Evolution API
-      const qrData = await this.callEvolutionAPI(`/instance/connect/${targetInstance.instance_name}`, 'GET', undefined, apiKey);
+      const qrData = await this.callEvolutionAPI(
+        `/instance/connect/${targetInstance.instance_name}`, 
+        'GET', 
+        undefined, 
+        apiKey,
+        targetInstance.api_url
+      );
+
+      console.log('QR Data received:', qrData);
 
       // Atualizar status no banco
       await supabaseEvolutionService.updateInstance(instanceId, {
         status: 'connecting',
-        qr_code: qrData.base64
+        qr_code: qrData.base64 || qrData.qrcode
       });
 
       return qrData;
@@ -97,14 +126,20 @@ class IntegratedEvolutionService {
 
   async getInstanceStatus(instanceId: string, apiKey: string) {
     try {
-      const { data: instance } = await supabaseEvolutionService.getInstances();
-      const targetInstance = instance?.find(i => i.id === instanceId);
+      const { data: instances } = await supabaseEvolutionService.getInstances();
+      const targetInstance = instances?.find(i => i.id === instanceId);
       
       if (!targetInstance) {
         throw new Error('Instance not found');
       }
 
-      const status = await this.callEvolutionAPI(`/instance/connectionState/${targetInstance.instance_name}`, 'GET', undefined, apiKey);
+      const status = await this.callEvolutionAPI(
+        `/instance/connectionState/${targetInstance.instance_name}`, 
+        'GET', 
+        undefined, 
+        apiKey,
+        targetInstance.api_url
+      );
       
       // Atualizar status no banco
       await supabaseEvolutionService.updateInstance(instanceId, {
@@ -121,17 +156,29 @@ class IntegratedEvolutionService {
   // Mensagens
   async sendTextMessage(instanceId: string, to: string, text: string, apiKey: string) {
     try {
-      const { data: instance } = await supabaseEvolutionService.getInstances();
-      const targetInstance = instance?.find(i => i.id === instanceId);
+      const { data: instances } = await supabaseEvolutionService.getInstances();
+      const targetInstance = instances?.find(i => i.id === instanceId);
       
       if (!targetInstance) {
         throw new Error('Instance not found');
       }
 
-      const response = await this.callEvolutionAPI(`/message/sendText/${targetInstance.instance_name}`, 'POST', {
-        number: to,
-        text: text
-      }, apiKey);
+      console.log('Sending message to:', to, 'from instance:', targetInstance.instance_name);
+
+      const response = await this.callEvolutionAPI(
+        `/message/sendText/${targetInstance.instance_name}`, 
+        'POST', 
+        {
+          number: to.replace('@s.whatsapp.net', ''),
+          text: text,
+          delay: 1200,
+          linkPreview: false
+        }, 
+        apiKey,
+        targetInstance.api_url
+      );
+
+      console.log('Message sent response:', response);
 
       // Salvar mensagem no banco
       await supabaseEvolutionService.saveMessage({
@@ -153,14 +200,20 @@ class IntegratedEvolutionService {
 
   async findMessages(instanceId: string, params: any, apiKey: string) {
     try {
-      const { data: instance } = await supabaseEvolutionService.getInstances();
-      const targetInstance = instance?.find(i => i.id === instanceId);
+      const { data: instances } = await supabaseEvolutionService.getInstances();
+      const targetInstance = instances?.find(i => i.id === instanceId);
       
       if (!targetInstance) {
         throw new Error('Instance not found');
       }
 
-      const messages = await this.callEvolutionAPI(`/chat/findMessages/${targetInstance.instance_name}`, 'POST', params, apiKey);
+      const messages = await this.callEvolutionAPI(
+        `/chat/findMessages/${targetInstance.instance_name}`, 
+        'POST', 
+        params, 
+        apiKey,
+        targetInstance.api_url
+      );
 
       // Sincronizar com o banco local
       if (messages && Array.isArray(messages)) {
@@ -187,14 +240,20 @@ class IntegratedEvolutionService {
   // Contatos
   async fetchContacts(instanceId: string, apiKey: string) {
     try {
-      const { data: instance } = await supabaseEvolutionService.getInstances();
-      const targetInstance = instance?.find(i => i.id === instanceId);
+      const { data: instances } = await supabaseEvolutionService.getInstances();
+      const targetInstance = instances?.find(i => i.id === instanceId);
       
       if (!targetInstance) {
         throw new Error('Instance not found');
       }
 
-      const contacts = await this.callEvolutionAPI(`/chat/fetchContacts/${targetInstance.instance_name}`, 'GET', undefined, apiKey);
+      const contacts = await this.callEvolutionAPI(
+        `/chat/fetchContacts/${targetInstance.instance_name}`, 
+        'GET', 
+        undefined, 
+        apiKey,
+        targetInstance.api_url
+      );
 
       // Sincronizar com o banco local
       if (contacts && Array.isArray(contacts)) {
