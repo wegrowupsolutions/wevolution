@@ -20,10 +20,7 @@ class IntegratedEvolutionService {
       url: apiUrl || 'https://evolution.serverwegrowup.com.br',
       path,
       method,
-      headers: apiKey ? { 
-        apikey: apiKey,
-        'Content-Type': 'application/json'
-      } : {
+      headers: { 
         'Content-Type': 'application/json'
       },
       body

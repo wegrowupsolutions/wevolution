@@ -80,9 +80,11 @@ serve(async (req) => {
 
     console.log('Authenticated user:', user.id);
 
-    // Preparar URL completa
-    const evolutionUrl = `${url}${path}`;
-    console.log('Evolution URL:', evolutionUrl);
+    // Preparar URL completa (priorizar do Supabase secrets, depois do request)
+    const evolutionServerUrl = Deno.env.get('EVOLUTION_SERVER_URL') || url || 'https://evolution.serverwegrowup.com.br';
+    const evolutionUrl = `${evolutionServerUrl}${path}`;
+    console.log('Evolution Server URL:', evolutionServerUrl);
+    console.log('Evolution Full URL:', evolutionUrl);
 
     // Preparar headers para Evolution API
     const fetchHeaders: Record<string, string> = {
@@ -91,12 +93,13 @@ serve(async (req) => {
       'User-Agent': 'Evolution-Proxy/1.0'
     };
 
-    // Adicionar API key se fornecida
-    if (requestHeaders?.apikey) {
-      fetchHeaders['apikey'] = requestHeaders.apikey;
-      console.log('API Key added to headers (masked):', requestHeaders.apikey.substring(0, 8) + '...');
+    // Adicionar API key (priorizar do Supabase secrets, depois do request)
+    const evolutionApiKey = Deno.env.get('EVOLUTION_API_KEY') || requestHeaders?.apikey;
+    if (evolutionApiKey) {
+      fetchHeaders['apikey'] = evolutionApiKey;
+      console.log('API Key added to headers (masked):', evolutionApiKey.substring(0, 8) + '...');
     } else {
-      console.warn('No API key provided in headers');
+      console.warn('No API key provided in headers or environment');
     }
 
     console.log('Final fetch headers:', { ...fetchHeaders, apikey: fetchHeaders.apikey ? '[MASKED]' : 'NOT_SET' });
