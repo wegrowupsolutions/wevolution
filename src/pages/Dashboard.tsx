@@ -17,14 +17,14 @@ const Dashboard = () => {
   ];
 
   return (
-    <div className="container mx-auto p-6 space-y-8">
+    <div className="p-6 space-y-6">
       <div className="flex flex-col gap-4 md:flex-row md:justify-between md:items-center">
-        <div className="space-y-2">
-          <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+        <div className="space-y-1">
+          <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
             Dashboard Evolution
           </h1>
-          <p className="text-muted-foreground text-lg">
-            Gerencie suas integrações WhatsApp e n8n em tempo real
+          <p className="text-muted-foreground">
+            Gerencie suas integrações WhatsApp e n8n
           </p>
         </div>
         <Button size="lg" className="shadow-lg hover:shadow-xl transition-all">
@@ -33,7 +33,7 @@ const Dashboard = () => {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="border-l-4 border-l-success hover:shadow-md transition-all">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">Instâncias Ativas</CardTitle>
@@ -96,7 +96,7 @@ const Dashboard = () => {
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="shadow-lg hover:shadow-xl transition-all">
           <CardHeader className="border-b border-border/50">
             <CardTitle className="flex items-center gap-2 text-xl">

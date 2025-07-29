@@ -160,7 +160,7 @@ const Layout = ({ children }: LayoutProps) => {
         </div>
 
         {/* Page content */}
-        <main className="min-h-[calc(100vh-4rem)] bg-gradient-to-br from-background via-background to-muted/20">
+        <main className="min-h-[calc(100vh-4rem)]">
           <div className="animate-fade-in">
             {children}
           </div>
