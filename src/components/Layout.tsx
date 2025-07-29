@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { useEvolutionConfig } from "@/hooks/useEvolutionConfig";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -14,7 +15,8 @@ import {
   X,
   Activity,
   Zap,
-  Bell
+  Bell,
+  LogOut
 } from "lucide-react";
 
 interface LayoutProps {
@@ -24,6 +26,7 @@ interface LayoutProps {
 const Layout = ({ children }: LayoutProps) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
+  const { clearConfig } = useEvolutionConfig();
 
   const navigation = [
     { name: "Dashboard", href: "/", icon: LayoutDashboard },
@@ -155,6 +158,16 @@ const Layout = ({ children }: LayoutProps) => {
             <Button variant="ghost" size="sm" className="relative hover:bg-muted/50">
               <Bell className="w-4 h-4" />
               <span className="absolute -top-1 -right-1 w-2 h-2 bg-destructive rounded-full"></span>
+            </Button>
+            
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={clearConfig}
+              className="relative hover:bg-muted/50"
+              title="Sair e reconfigurar"
+            >
+              <LogOut className="w-4 h-4" />
             </Button>
             
             <ThemeToggle />

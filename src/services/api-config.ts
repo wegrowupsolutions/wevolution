@@ -1,11 +1,49 @@
-// Configurações da API
-export const API_CONFIG = {
-  baseURL: import.meta.env.VITE_EVOLUTION_API_URL || 'https://api.evolution.com',
-  timeout: 30000,
-  headers: {
-    'Content-Type': 'application/json',
+import axios from 'axios';
+
+// Função para obter configurações do localStorage
+const getStoredConfig = () => {
+  try {
+    const stored = localStorage.getItem('evolution-config');
+    return stored ? JSON.parse(stored) : null;
+  } catch {
+    return null;
   }
 };
+
+// Configurações da API dinâmicas
+export const getApiConfig = () => {
+  const config = getStoredConfig();
+  return {
+    baseURL: config?.serverUrl || import.meta.env.VITE_EVOLUTION_API_URL || 'https://api.evolution.com',
+    timeout: 30000,
+    headers: {
+      'Content-Type': 'application/json',
+    }
+  };
+};
+
+// Para compatibilidade com código existente
+export const API_CONFIG = getApiConfig();
+
+// Criar instância do axios
+export const createApiInstance = () => {
+  const apiConfig = getApiConfig();
+  
+  const instance = axios.create(apiConfig);
+
+  // Interceptor para adicionar API Key automaticamente
+  instance.interceptors.request.use((config) => {
+    const storedConfig = getStoredConfig();
+    if (storedConfig?.apiKey) {
+      config.headers['apikey'] = storedConfig.apiKey;
+    }
+    return config;
+  });
+
+  return instance;
+};
+
+export const api = createApiInstance();
 
 // Endpoints da Evolution API
 export const API_ENDPOINTS = {
