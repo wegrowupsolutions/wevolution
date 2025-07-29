@@ -18,8 +18,8 @@ const Instances = () => {
   const [loading, setLoading] = useState(false);
   const [newInstance, setNewInstance] = useState({
     instanceName: "",
-    apiUrl: "",
-    apiKey: "",
+    apiUrl: "https://evolution.serverwegrowup.com.br",
+    apiKey: "066327121bd64f8356c26e9edfa1799d",
     webhookUrl: `https://xzjzxckxaiwneybyduim.supabase.co/functions/v1/webhook-handler`,
   });
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -102,6 +102,11 @@ const Instances = () => {
 
     try {
       setLoading(true);
+      console.log('=== Creating instance with data ===');
+      console.log('Instance name:', newInstance.instanceName);
+      console.log('API URL:', newInstance.apiUrl);
+      console.log('API Key (masked):', newInstance.apiKey.substring(0, 8) + '...');
+      console.log('Webhook URL:', newInstance.webhookUrl);
       
       // Criar instância através do serviço integrado
       const result = await integratedEvolutionService.createInstance({
@@ -111,20 +116,22 @@ const Instances = () => {
         webhook: newInstance.webhookUrl,
         webhook_by_events: true,
         events: [
-          'qrcode.updated',
-          'connection.update', 
-          'messages.upsert',
-          'contacts.upsert'
+          'QRCODE_UPDATED',
+          'CONNECTION_UPDATE', 
+          'MESSAGES_UPSERT',
+          'CONTACTS_UPSERT',
+          'SEND_MESSAGE'
         ]
       });
 
+      console.log('Instance creation result:', result);
       toast.success("Instância criada com sucesso! Pronta para receber e enviar mensagens.");
       
       // Limpar formulário
       setNewInstance({
         instanceName: "",
-        apiUrl: "",
-        apiKey: "",
+        apiUrl: "https://evolution.serverwegrowup.com.br",
+        apiKey: "066327121bd64f8356c26e9edfa1799d",
         webhookUrl: `https://xzjzxckxaiwneybyduim.supabase.co/functions/v1/webhook-handler`,
       });
       
@@ -139,16 +146,19 @@ const Instances = () => {
       
       if (error.message) {
         errorMessage = error.message;
-      }
-      
-      // Se é erro da Evolution API, mostrar detalhes específicos
-      if (error.message?.includes('Evolution API error')) {
-        errorMessage = `Erro da Evolution API: Verifique se a URL e API Key estão corretos. ${error.message}`;
-      }
-      
-      // Se é erro de conectividade
-      if (error.message?.includes('fetch')) {
-        errorMessage = "Erro de conectividade: Verifique se a URL da Evolution API está acessível.";
+        
+        // Tratamento específico para diferentes tipos de erro
+        if (error.message.includes('Invalid integration')) {
+          errorMessage = "Erro: Integração inválida. Configuração do servidor Evolution pode estar incorreta.";
+        } else if (error.message.includes('400')) {
+          errorMessage = "Erro 400: Dados da requisição inválidos. Verifique os parâmetros.";
+        } else if (error.message.includes('401')) {
+          errorMessage = "Erro 401: API Key inválida. Verifique suas credenciais.";
+        } else if (error.message.includes('404')) {
+          errorMessage = "Erro 404: Endpoint não encontrado. Verifique a URL da API.";
+        } else if (error.message.includes('500')) {
+          errorMessage = "Erro 500: Erro interno do servidor Evolution API.";
+        }
       }
       
       toast.error(errorMessage);
@@ -242,6 +252,31 @@ const Instances = () => {
     }
   };
 
+  const testEvolutionConnection = async () => {
+    try {
+      console.log('=== Testing Evolution connection ===');
+      setLoading(true);
+      
+      // Usar os valores padrão da configuração
+      const testResponse = await integratedEvolutionService.callEvolutionAPI(
+        '/instance/fetchInstances',
+        'GET',
+        undefined,
+        '066327121bd64f8356c26e9edfa1799d', // API Key padrão
+        'https://evolution.serverwegrowup.com.br' // URL padrão
+      );
+      
+      console.log('Test response:', testResponse);
+      toast.success('Conexão com Evolution API funcionando! ✅');
+      
+    } catch (error) {
+      console.error('Connection test failed:', error);
+      toast.error(`Teste de conexão falhou: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
@@ -253,6 +288,14 @@ const Instances = () => {
           />
         </div>
         <div className="flex items-center gap-4">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={testEvolutionConnection}
+            disabled={loading}
+          >
+            {loading ? 'Testando...' : 'Testar Conexão'}
+          </Button>
           <Button variant="ghost" size="sm" onClick={loadInstances}>
             <RefreshCw className="w-4 h-4" />
           </Button>

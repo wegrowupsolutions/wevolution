@@ -2,14 +2,14 @@ import { supabase } from '@/integrations/supabase/client';
 import { supabaseEvolutionService } from './SupabaseEvolutionService';
 
 class IntegratedEvolutionService {
-  // Proxy para fazer chamadas à Evolution API através do edge function
-  private async callEvolutionAPI(path: string, method: 'GET' | 'POST' | 'PUT' | 'DELETE' = 'GET', body?: any, apiKey?: string, apiUrl?: string) {
+  // Proxy para fazer chamadas à Evolution API através do edge function (método público para testes)
+  public async callEvolutionAPI(path: string, method: 'GET' | 'POST' | 'PUT' | 'DELETE' = 'GET', body?: any, apiKey?: string, apiUrl?: string) {
     console.log('=== IntegratedEvolutionService.callEvolutionAPI ===');
     console.log('Path:', path);
     console.log('Method:', method);
     console.log('API URL:', apiUrl);
     console.log('Has API Key:', !!apiKey);
-    console.log('Body:', body);
+    console.log('Body:', JSON.stringify(body, null, 2));
 
     const session = await supabase.auth.getSession();
     if (!session.data.session?.access_token) {
@@ -17,39 +17,48 @@ class IntegratedEvolutionService {
     }
 
     const requestBody = {
-      url: apiUrl || 'https://api.evolution-api.com',
+      url: apiUrl || 'https://evolution.serverwegrowup.com.br',
       path,
       method,
       headers: apiKey ? { 
         apikey: apiKey,
         'Content-Type': 'application/json'
-      } : {},
+      } : {
+        'Content-Type': 'application/json'
+      },
       body
     };
 
     console.log('Request to edge function:', JSON.stringify(requestBody, null, 2));
 
-    const { data, error } = await supabase.functions.invoke('evolution-proxy', {
-      body: requestBody,
-      headers: {
-        Authorization: `Bearer ${session.data.session.access_token}`,
-        'Content-Type': 'application/json'
-      },
-    });
+    try {
+      const { data, error } = await supabase.functions.invoke('evolution-proxy', {
+        body: requestBody,
+        headers: {
+          Authorization: `Bearer ${session.data.session.access_token}`,
+          'Content-Type': 'application/json'
+        },
+      });
 
-    console.log('Edge function response:', { data, error });
+      console.log('Edge function response data:', data);
+      console.log('Edge function response error:', error);
 
-    if (error) {
-      console.error('Edge function error:', error);
-      throw new Error(`Edge Function error: ${error.message}`);
+      if (error) {
+        console.error('Edge function error:', error);
+        throw new Error(`Edge Function error: ${error.message}`);
+      }
+      
+      if (data?.error) {
+        console.error('Evolution API error from edge function:', data);
+        throw new Error(`Evolution API error: ${data.error}${data.details ? ` - Details: ${JSON.stringify(data.details)}` : ''}`);
+      }
+
+      console.log('Successfully received data from Evolution API:', data);
+      return data;
+    } catch (fetchError) {
+      console.error('Error calling edge function:', fetchError);
+      throw fetchError;
     }
-    
-    if (data?.error) {
-      console.error('Evolution API error:', data);
-      throw new Error(`Evolution API error: ${data.error}` + (data.details ? ` - ${JSON.stringify(data.details)}` : ''));
-    }
-
-    return data;
   }
 
   // Instâncias
