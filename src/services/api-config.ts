@@ -1,6 +1,6 @@
 // Configurações da API
 export const API_CONFIG = {
-  baseURL: process.env.REACT_APP_EVOLUTION_API_URL || 'https://api.evolution.com',
+  baseURL: import.meta.env.VITE_EVOLUTION_API_URL || 'https://api.evolution.com',
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
