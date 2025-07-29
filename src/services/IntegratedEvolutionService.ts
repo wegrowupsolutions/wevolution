@@ -66,20 +66,25 @@ class IntegratedEvolutionService {
     try {
       console.log('Creating instance with data:', instanceData);
 
-      // Criar instância via Evolution API com o formato correto
-      const evolutionResponse = await this.callEvolutionAPI('/instance/create', 'POST', {
+      // Criar instância via Evolution API com formato adaptado ao seu servidor
+      const evolutionPayload = {
         instanceName: instanceData.instanceName,
-        integration: "WHATSAPP-BAILEYS",  // Obrigatório para evitar "Invalid integration"
-        qrcode: instanceData.qrcode !== false,
-        webhook: instanceData.webhook,
-        webhook_by_events: instanceData.webhook_by_events !== false,
-        events: instanceData.events || [
-          'qrcode.updated',
-          'connection.update', 
-          'messages.upsert',
-          'contacts.upsert'
+        integration: "WHATSAPP-BAILEYS",
+        qrcode: true,
+        webhook: instanceData.webhook || `https://xzjzxckxaiwneybyduim.supabase.co/functions/v1/webhook-handler`,
+        webhook_by_events: true,
+        events: [
+          'QRCODE_UPDATED',
+          'CONNECTION_UPDATE',
+          'MESSAGES_UPSERT',
+          'CONTACTS_UPSERT',
+          'SEND_MESSAGE'
         ]
-      }, instanceData.apiKey, instanceData.apiUrl);
+      };
+
+      console.log('Evolution API payload:', JSON.stringify(evolutionPayload, null, 2));
+
+      const evolutionResponse = await this.callEvolutionAPI('/instance/create', 'POST', evolutionPayload, instanceData.apiKey, instanceData.apiUrl);
 
       console.log('Evolution API response:', evolutionResponse);
 

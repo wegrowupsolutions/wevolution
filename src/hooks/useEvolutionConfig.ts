@@ -11,8 +11,8 @@ export interface EvolutionConfig {
 }
 
 const defaultConfig: EvolutionConfig = {
-  serverUrl: '',
-  apiKey: '',
+  serverUrl: 'https://evolution.serverwegrowup.com.br',
+  apiKey: '066327121bd64f8356c26e9edfa1799d',
   exposeInFetchInstances: true,
   delInstance: false,
   qrcodeLimit: 1902,
@@ -35,6 +35,10 @@ export const useEvolutionConfig = () => {
         console.error('Error parsing stored config:', error);
         setIsConfigured(false);
       }
+    } else {
+      // Se não há configuração salva, usar a padrão
+      setConfig(defaultConfig);
+      setIsConfigured(true);
     }
   }, []);
 
@@ -46,8 +50,8 @@ export const useEvolutionConfig = () => {
 
   const clearConfig = () => {
     localStorage.removeItem('evolution-config');
-    setConfig(null);
-    setIsConfigured(false);
+    setConfig(defaultConfig); // Voltar para configuração padrão
+    setIsConfigured(true);
   };
 
   return {
