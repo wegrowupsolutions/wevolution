@@ -21,7 +21,7 @@ const Dashboard = () => {
       <div className="flex flex-col gap-4 md:flex-row md:justify-between md:items-center">
         <div className="space-y-1">
           <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-            Dashboard Evolution
+            Dashboard Wevolution
           </h1>
           <p className="text-muted-foreground">
             Gerencie suas integrações WhatsApp e n8n

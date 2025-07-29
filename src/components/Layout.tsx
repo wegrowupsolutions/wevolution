@@ -58,7 +58,7 @@ const Layout = ({ children }: LayoutProps) => {
               </div>
               <div>
                 <span className="font-bold text-lg bg-gradient-primary bg-clip-text text-transparent">
-                  Evolution
+                  Wevolution
                 </span>
                 <p className="text-xs text-muted-foreground">WhatsApp Platform</p>
               </div>
@@ -110,7 +110,7 @@ const Layout = ({ children }: LayoutProps) => {
                 <span>Sistema Online</span>
               </div>
               <div className="text-xs text-muted-foreground space-y-1">
-                <p className="font-medium">Evolution Platform v2.0</p>
+                <p className="font-medium">Wevolution Platform v2.0</p>
                 <p className="text-[10px]">Conecte suas aplicações ao n8n</p>
               </div>
             </div>
