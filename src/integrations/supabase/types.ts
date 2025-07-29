@@ -14,7 +14,279 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      contacts: {
+        Row: {
+          created_at: string
+          id: string
+          instance_id: string
+          is_whatsapp: boolean | null
+          last_seen: string | null
+          name: string | null
+          phone_number: string | null
+          profile_picture_url: string | null
+          push_name: string | null
+          remote_jid: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          instance_id: string
+          is_whatsapp?: boolean | null
+          last_seen?: string | null
+          name?: string | null
+          phone_number?: string | null
+          profile_picture_url?: string | null
+          push_name?: string | null
+          remote_jid: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          instance_id?: string
+          is_whatsapp?: boolean | null
+          last_seen?: string | null
+          name?: string | null
+          phone_number?: string | null
+          profile_picture_url?: string | null
+          push_name?: string | null
+          remote_jid?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contacts_instance_id_fkey"
+            columns: ["instance_id"]
+            isOneToOne: false
+            referencedRelation: "evolution_instances"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      evolution_instances: {
+        Row: {
+          api_key: string | null
+          api_url: string | null
+          created_at: string
+          id: string
+          instance_name: string
+          last_connection: string | null
+          phone_number: string | null
+          qr_code: string | null
+          status: string | null
+          updated_at: string
+          user_id: string
+          webhook_url: string | null
+        }
+        Insert: {
+          api_key?: string | null
+          api_url?: string | null
+          created_at?: string
+          id?: string
+          instance_name: string
+          last_connection?: string | null
+          phone_number?: string | null
+          qr_code?: string | null
+          status?: string | null
+          updated_at?: string
+          user_id: string
+          webhook_url?: string | null
+        }
+        Update: {
+          api_key?: string | null
+          api_url?: string | null
+          created_at?: string
+          id?: string
+          instance_name?: string
+          last_connection?: string | null
+          phone_number?: string | null
+          qr_code?: string | null
+          status?: string | null
+          updated_at?: string
+          user_id?: string
+          webhook_url?: string | null
+        }
+        Relationships: []
+      }
+      groups: {
+        Row: {
+          created_at: string
+          description: string | null
+          group_jid: string
+          id: string
+          instance_id: string
+          owner_jid: string | null
+          participants_count: number | null
+          subject: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          group_jid: string
+          id?: string
+          instance_id: string
+          owner_jid?: string | null
+          participants_count?: number | null
+          subject: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          group_jid?: string
+          id?: string
+          instance_id?: string
+          owner_jid?: string | null
+          participants_count?: number | null
+          subject?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "groups_instance_id_fkey"
+            columns: ["instance_id"]
+            isOneToOne: false
+            referencedRelation: "evolution_instances"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messages: {
+        Row: {
+          contact_data: Json | null
+          created_at: string
+          from_me: boolean
+          id: string
+          instance_id: string
+          location_data: Json | null
+          media_type: string | null
+          media_url: string | null
+          message_id: string
+          message_type: string
+          read_at: string | null
+          remote_jid: string
+          text_content: string | null
+          timestamp: string
+          user_id: string
+        }
+        Insert: {
+          contact_data?: Json | null
+          created_at?: string
+          from_me?: boolean
+          id?: string
+          instance_id: string
+          location_data?: Json | null
+          media_type?: string | null
+          media_url?: string | null
+          message_id: string
+          message_type: string
+          read_at?: string | null
+          remote_jid: string
+          text_content?: string | null
+          timestamp?: string
+          user_id: string
+        }
+        Update: {
+          contact_data?: Json | null
+          created_at?: string
+          from_me?: boolean
+          id?: string
+          instance_id?: string
+          location_data?: Json | null
+          media_type?: string | null
+          media_url?: string | null
+          message_id?: string
+          message_type?: string
+          read_at?: string | null
+          remote_jid?: string
+          text_content?: string | null
+          timestamp?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_instance_id_fkey"
+            columns: ["instance_id"]
+            isOneToOne: false
+            referencedRelation: "evolution_instances"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          email: string | null
+          id: string
+          name: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_settings: {
+        Row: {
+          created_at: string
+          default_instance: string | null
+          evolution_api_url: string | null
+          id: string
+          notifications_enabled: boolean | null
+          settings: Json | null
+          updated_at: string
+          user_id: string
+          webhook_enabled: boolean | null
+        }
+        Insert: {
+          created_at?: string
+          default_instance?: string | null
+          evolution_api_url?: string | null
+          id?: string
+          notifications_enabled?: boolean | null
+          settings?: Json | null
+          updated_at?: string
+          user_id: string
+          webhook_enabled?: boolean | null
+        }
+        Update: {
+          created_at?: string
+          default_instance?: string | null
+          evolution_api_url?: string | null
+          id?: string
+          notifications_enabled?: boolean | null
+          settings?: Json | null
+          updated_at?: string
+          user_id?: string
+          webhook_enabled?: boolean | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
