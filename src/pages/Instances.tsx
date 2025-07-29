@@ -1,67 +1,205 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, QrCode, Settings, Trash2, Activity } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
+import { Plus, QrCode, Settings, Trash2, Activity, Copy, RefreshCw } from "lucide-react";
+import { instanceService, type Instance, type InstanceConfig } from "@/services/InstanceService";
+import { useApiKey, useWebhookEvents } from "@/hooks/useEvolutionAPI";
 
 const Instances = () => {
-  const [instances, setInstances] = useState([
-    { 
-      id: "1", 
-      name: "WhatsApp Business", 
-      status: "connected", 
-      phone: "+55 11 99999-9999",
-      apiKey: "evo_api_key_123456",
-      createdAt: "2024-01-15"
-    },
-    { 
-      id: "2", 
-      name: "Suporte Cliente", 
-      status: "disconnected", 
-      phone: "+55 11 88888-8888",
-      apiKey: "evo_api_key_789012",
-      createdAt: "2024-01-20"
-    },
-  ]);
+  const [instances, setInstances] = useState<Instance[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [newInstance, setNewInstance] = useState<InstanceConfig>({ 
+    instanceName: "", 
+    qrcode: true,
+    webhook_by_events: true,
+    events: ["MESSAGES_UPSERT", "CONNECTION_UPDATE"]
+  });
+  const { apiKey, updateApiKey } = useApiKey();
+  const { connectionStatus, qrCode } = useWebhookEvents();
+  // Carregar instâncias
+  useEffect(() => {
+    if (apiKey) {
+      loadInstances();
+    }
+  }, [apiKey]);
 
-  const [newInstance, setNewInstance] = useState({ name: "", phone: "" });
+  const loadInstances = async () => {
+    try {
+      setLoading(true);
+      const data = await instanceService.fetchInstances();
+      setInstances(data);
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Falha ao carregar instâncias",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const createInstance = async () => {
+    if (!newInstance.instanceName) {
+      toast({
+        title: "Erro",
+        description: "Nome da instância é obrigatório",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      await instanceService.createInstance(newInstance);
+      toast({
+        title: "Sucesso",
+        description: "Instância criada com sucesso"
+      });
+      setNewInstance({ 
+        instanceName: "", 
+        qrcode: true,
+        webhook_by_events: true,
+        events: ["MESSAGES_UPSERT", "CONNECTION_UPDATE"]
+      });
+      loadInstances();
+    } catch (error) {
+      toast({
+        title: "Erro", 
+        description: "Falha ao criar instância",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const deleteInstance = async (instanceName: string) => {
+    try {
+      await instanceService.deleteInstance(instanceName);
+      toast({
+        title: "Sucesso",
+        description: "Instância deletada com sucesso"
+      });
+      loadInstances();
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Falha ao deletar instância", 
+        variant: "destructive"
+      });
+    }
+  };
+
+  const getQRCode = async (instanceName: string) => {
+    try {
+      const qrData = await instanceService.getQRCode(instanceName);
+      // QR Code será exibido via webhook events
+      toast({
+        title: "QR Code",
+        description: "QR Code solicitado, aguarde..."
+      });
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Falha ao obter QR Code",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const copyApiKey = (apiKey: string) => {
+    navigator.clipboard.writeText(apiKey);
+    toast({
+      title: "Copiado",
+      description: "API Key copiada para área de transferência"
+    });
+  };
 
   const getStatusColor = (status: string) => {
-    switch (status) {
+    const normalizedStatus = connectionStatus[status] || status;
+    switch (normalizedStatus) {
+      case "open": 
       case "connected": return "default";
       case "connecting": return "secondary";
+      case "close":
       case "disconnected": return "destructive";
       default: return "secondary";
     }
   };
 
   const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "connected": return <Activity className="w-4 h-4 text-green-500" />;
-      case "connecting": return <Activity className="w-4 h-4 text-yellow-500 animate-pulse" />;
-      case "disconnected": return <Activity className="w-4 h-4 text-red-500" />;
-      default: return <Activity className="w-4 h-4 text-gray-500" />;
+    const normalizedStatus = connectionStatus[status] || status;
+    switch (normalizedStatus) {
+      case "open":
+      case "connected": return <Activity className="w-4 h-4 text-success" />;
+      case "connecting": return <Activity className="w-4 h-4 text-warning animate-pulse" />;
+      case "close":
+      case "disconnected": return <Activity className="w-4 h-4 text-destructive" />;
+      default: return <Activity className="w-4 h-4 text-muted-foreground" />;
     }
   };
 
+  if (!apiKey) {
+    return (
+      <div className="container mx-auto p-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Configurar API Key</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label>Evolution API Key</Label>
+              <Input 
+                type="password"
+                placeholder="Digite sua API Key"
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    updateApiKey(e.currentTarget.value);
+                  }
+                }}
+              />
+            </div>
+            <Button 
+              onClick={() => {
+                const input = document.querySelector('input[type="password"]') as HTMLInputElement;
+                if (input?.value) {
+                  updateApiKey(input.value);
+                }
+              }}
+            >
+              Salvar API Key
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="h-full pl-2 pr-3 py-3 lg:pl-4 lg:pr-6 lg:py-6 space-y-4 lg:space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">Gerenciamento de Instâncias</h1>
-          <p className="text-muted-foreground">Crie e gerencie suas conexões WhatsApp Business</p>
+          <h1 className="text-xl md:text-2xl lg:text-3xl font-bold">Gerenciamento de Instâncias</h1>
+          <p className="text-xs md:text-sm text-muted-foreground">
+            Crie e gerencie suas conexões WhatsApp Business ({instances.length} instâncias)
+          </p>
         </div>
         
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="w-4 h-4 mr-2" />
-              Nova Instância
-            </Button>
-          </DialogTrigger>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={loadInstances} disabled={loading}>
+            <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+            Atualizar
+          </Button>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="w-4 h-4 mr-2" />
+                Nova Instância
+              </Button>
+            </DialogTrigger>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Criar Nova Instância</DialogTitle>
@@ -71,80 +209,98 @@ const Instances = () => {
                 <Label htmlFor="name">Nome da Instância</Label>
                 <Input
                   id="name"
-                  placeholder="Ex: WhatsApp Vendas"
-                  value={newInstance.name}
-                  onChange={(e) => setNewInstance({...newInstance, name: e.target.value})}
+                  placeholder="Ex: whatsapp-business"
+                  value={newInstance.instanceName}
+                  onChange={(e) => setNewInstance({...newInstance, instanceName: e.target.value})}
                 />
               </div>
               <div>
-                <Label htmlFor="phone">Número de Telefone</Label>
+                <Label htmlFor="webhook">URL do Webhook (opcional)</Label>
                 <Input
-                  id="phone"
-                  placeholder="+55 11 99999-9999"
-                  value={newInstance.phone}
-                  onChange={(e) => setNewInstance({...newInstance, phone: e.target.value})}
+                  id="webhook"
+                  placeholder="https://seu-n8n.com/webhook/evolution"
+                  value={newInstance.webhook || ''}
+                  onChange={(e) => setNewInstance({...newInstance, webhook: e.target.value})}
                 />
               </div>
-              <Button className="w-full">Criar Instância</Button>
+              <Button className="w-full" onClick={createInstance}>Criar Instância</Button>
             </div>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {loading ? (
+        <div className="flex justify-center p-8">
+          <RefreshCw className="w-8 h-8 animate-spin" />
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {instances.map((instance) => (
-          <Card key={instance.id} className="relative">
+          <Card key={instance.instance.instanceName} className="relative">
             <CardHeader>
               <div className="flex justify-between items-start">
                 <div>
                   <CardTitle className="flex items-center gap-2">
-                    {getStatusIcon(instance.status)}
-                    {instance.name}
+                    {getStatusIcon(instance.instance.status)}
+                    {instance.instance.instanceName}
                   </CardTitle>
-                  <p className="text-sm text-muted-foreground">{instance.phone}</p>
+                  <p className="text-sm text-muted-foreground">
+                    Status: {connectionStatus[instance.instance.instanceName] || instance.instance.status}
+                  </p>
                 </div>
-                <Badge variant={getStatusColor(instance.status)}>
-                  {instance.status}
+                <Badge variant={getStatusColor(instance.instance.status)}>
+                  {connectionStatus[instance.instance.instanceName] || instance.instance.status}
                 </Badge>
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div>
-                <Label className="text-xs text-muted-foreground">API Key</Label>
-                <div className="flex items-center space-x-2">
-                  <Input 
-                    value={instance.apiKey} 
-                    readOnly 
-                    className="text-xs font-mono" 
-                  />
-                  <Button variant="outline" size="sm">
-                    Copiar
-                  </Button>
+              {instance.hash?.apikey && (
+                <div>
+                  <Label className="text-xs text-muted-foreground">API Key</Label>
+                  <div className="flex items-center space-x-2">
+                    <Input 
+                      value={`${instance.hash.apikey.substring(0, 20)}...`} 
+                      readOnly 
+                      className="text-xs font-mono" 
+                    />
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => copyApiKey(instance.hash!.apikey)}
+                    >
+                      <Copy className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </div>
-              </div>
+              )}
               
               <div className="flex space-x-2">
-                <Button variant="outline" size="sm" className="flex-1">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="flex-1"
+                  onClick={() => getQRCode(instance.instance.instanceName)}
+                >
                   <QrCode className="w-4 h-4 mr-2" />
                   QR Code
                 </Button>
                 <Button variant="outline" size="sm">
                   <Settings className="w-4 h-4" />
                 </Button>
-                <Button variant="outline" size="sm">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => deleteInstance(instance.instance.instanceName)}
+                >
                   <Trash2 className="w-4 h-4" />
                 </Button>
-              </div>
-
-              <div className="pt-2 border-t">
-                <p className="text-xs text-muted-foreground">
-                  Criado em: {instance.createdAt}
-                </p>
               </div>
             </CardContent>
           </Card>
         ))}
-      </div>
+        </div>
+      )}
 
       <Card>
         <CardHeader>
